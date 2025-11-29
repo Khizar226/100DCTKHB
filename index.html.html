@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 Day Trading Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+
+        .health-bar-container {
+            box-shadow: 0 0 10px rgba(0,0,0,0.5) inset;
+        }
+        
+        .health-fill {
+            transition: width 0.5s ease-in-out, background-color 0.5s ease;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- SETUP MODAL -->
+    <div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
+        <div class="bg-slate-800 p-8 rounded-xl border border-slate-600 max-w-md w-full shadow-2xl">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-2"><i class="fas fa-rocket mr-2"></i>New Challenge Setup</h2>
+            <p class="text-slate-400 mb-6 text-sm">Personalize your 100-day journey.</p>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Your Name</label>
+                        <input type="text" id="userName" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. Alex">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Your Age</label>
+                        <input type="number" id="userAge" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 25">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Initial Capital ($)</label>
+                    <input type="number" id="initCapital" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 1000">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Initial Target % (Daily)</label>
+                    <input type="number" id="initialTargetPerc" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 3.0">
+                    <p class="text-xs text-slate-500 mt-1">This is your ideal compounding goal.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Start Date</label>
+                    <input type="date" id="startDate" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none">
+                </div>
+
+                <div class="text-center bg-slate-700/50 p-3 rounded-lg text-sm">
+                    <p class="text-slate-400">100-Day Target with this percentage:</p>
+                    <p id="initialProjectionDisplay" class="text-lg font-bold text-yellow-400 mono mt-1">$0.00</p>
+                </div>
+
+                <button onclick="startChallenge()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg shadow-emerald-900/50">
+                    Initialize Protocol
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAILY QUIZ MODAL -->
+    <div id="quizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
+        <div class="bg-slate-800 p-8 rounded-xl border border-slate-600 max-w-lg w-full shadow-2xl">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-2 text-center"><i class="fas fa-brain mr-2"></i>Daily Focus Challenge</h2>
+            <p class="text-slate-400 mb-6 text-sm text-center">Attempt: <span id="quizAttemptCount" class="font-bold text-yellow-300">1</span></p>
+            
+            <div id="quizContent" class="text-center space-y-6">
+                <div class="text-xl text-slate-300">Time Left: <span id="quizTimer" class="font-bold text-red-400">10s</span></div>
+                <div class="text-5xl font-extrabold text-white mono" id="quizQuestion"></div>
+                
+                <div>
+                    <input type="number" id="quizAnswer" class="w-full max-w-xs text-center bg-slate-900 border border-slate-600 rounded p-3 text-white text-3xl mono focus:border-yellow-500 focus:outline-none" placeholder="?" autofocus>
+                </div>
+            </div>
+
+            <div id="quizMessage" class="text-center text-red-400 text-lg font-semibold my-4 hidden"></div>
+
+            <div class="mt-6 text-center flex gap-4 justify-center">
+                <button onclick="checkQuizAnswer()" id="quizSubmitBtn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded transition shadow-lg shadow-yellow-900/50">
+                    Submit Answer
+                </button>
+                <button onclick="retryQuiz()" id="quizRetryBtn" class="bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-8 rounded transition shadow-lg shadow-red-900/50 hidden">
+                    <i class="fas fa-redo mr-2"></i> Retry Focus
+                </button>
+                <button onclick="closeQuizModal()" id="quizCloseBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 px-8 rounded transition shadow-lg hidden">
+                    <i class="fas fa-times mr-2"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MAIN APP -->
+    <div id="app" class="max-w-7xl mx-auto hidden">
+        
+        <!-- HEADER & ACTIONS -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                    100 Day Spot Challenge
+                </h1>
+                <p class="text-slate-400 text-sm mt-1 tracking-wider">
+                    Protocol initialized by <span id="dispUserName" class="font-semibold text-white"></span> (<span id="dispUserAge"></span>)
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm transition border border-slate-600">
+                    <i class="fas fa-file-csv mr-2"></i>Export
+                </button>
+                <button onclick="confirmReset()" class="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded text-sm transition">
+                    <i class="fas fa-skull mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- SECTION 1: DASHBOARD GRID -->
+        <div class="flex items-center mb-3">
+            <h2 class="text-xl font-bold text-white">Challenge Status</h2>
+            <span class="ml-3 w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold">1</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            
+            <!-- CARD 1: Current Balance -->
+            <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500">
+                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Current Balance</div>
+                <div class="text-3xl font-bold mt-1 mono" id="dispCurrentBalance">$0.00</div>
+                <div class="text-xs mt-2" id="dispTotalPnL">
+                    <span class="text-emerald-400">+0.00%</span> Total Return
+                </div>
+            </div>
+
+            <!-- CARD 2: Day Progress -->
+            <div class="glass-panel p-5 rounded-xl border-l-4 border-cyan-500">
+                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Day Progress</div>
+                <div class="flex items-baseline mt-1 gap-2">
+                    <div class="text-3xl font-bold mono" id="dispDay">1</div>
+                    <div class="text-slate-500 text-sm">/ 100</div>
+                </div>
+                <!-- Mini Progress Bar -->
+                <div class="w-full bg-slate-700 h-1.5 mt-4 rounded-full overflow-hidden">
+                    <div id="dayProgressBar" class="bg-cyan-500 h-full" style="width: 1%"></div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Account Health / Discipline -->
+            <div class="glass-panel p-5 rounded-xl border-l-4 border-purple-500">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Account Health (Consistency)</div>
+                    <i class="fas fa-dumbbell text-purple-400"></i>
+                </div>
+                <div class="health-bar-container w-full h-8 bg-slate-900 rounded border border-slate-700 relative overflow-hidden">
+                    <div class="absolute inset-0 z-10 flex justify-between px-2">
+                        <div class="w-px h-full bg-slate-800/50"></div>
+                        <div class="w-px h-full bg-slate-800/50"></div>
+                        <div class="w-px h-full bg-slate-800/50"></div>
+                        <div class="w-px h-full bg-slate-800/50"></div>
+                    </div>
+                    <div id="healthFill" class="health-fill h-full bg-gradient-to-r from-red-500 via-yellow-400 to-emerald-500" style="width: 100%;"></div>
+                </div>
+                <div class="flex justify-between text-xs mt-2 text-slate-500">
+                    <span>Critical</span>
+                    <span>Stable</span>
+                    <span>Thriving</span>
+                </div>
+            </div>
+
+            <!-- CARD 4: Game Accuracy -->
+            <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500">
+                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Mental Challenge Success</div>
+                <div class="flex items-baseline mt-1 gap-2">
+                    <div class="text-3xl font-bold mono" id="dispGameAccuracy">0.0%</div>
+                </div>
+                <div class="text-xs mt-2 text-slate-500">
+                    <span id="dispGameStatus" class="font-bold text-yellow-400">Need Practice</span> Overall Accuracy
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: PROJECTIONS PANEL -->
+        <div class="glass-panel rounded-xl p-4 mb-6 border border-slate-700/50">
+            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center">
+                <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold mr-2">2</span>
+                <i class="fas fa-chart-line mr-2 text-blue-400"></i>
+                Future Projection
+            </h3>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="bg-slate-800/50 rounded p-2">
+                    <div class="text-xs text-slate-500">Initial Goal (<span id="initialGoalPerc"></span>)</div>
+                    <div class="text-lg font-bold text-yellow-300 mono" id="initialGoal100">$0.00</div>
+                </div>
+                <div class="bg-slate-800/50 rounded p-2">
+                    <div class="text-xs text-slate-500">Current Average (<span id="dispAvgReturnPerc">0.0%</span>)</div>
+                    <div class="text-lg font-bold text-emerald-300 mono" id="proj100Actual">$0.00</div>
+                </div>
+                <div class="bg-slate-800/50 rounded p-2">
+                    <div class="text-xs text-slate-500">Target for Day 100 (Best Case)</div>
+                    <div class="text-xl font-bold text-emerald-300 mono" id="proj100Target">$0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: INPUT FORM FOR CURRENT DAY -->
+        <div class="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 shadow-lg">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center">
+                <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold mr-2">3</span>
+                <span class="bg-emerald-600 w-6 h-6 rounded flex items-center justify-center text-xs mr-2" id="inputDayNum">1</span>
+                Log Today's Trading Results
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center mb-4">
+                <div class="md:col-span-2 bg-slate-900 p-2 rounded border border-slate-700">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider">Today's Compounding Target</div>
+                    <div class="flex gap-4">
+                        <span id="currentTargetPerc" class="text-cyan-400 font-bold text-lg mono">0.0%</span>
+                        <span id="currentTargetAmt" class="text-white font-bold text-lg mono">$0.00</span>
+                    </div>
+                </div>
+                <div id="gameStatusIndicator" class="md:col-span-2 text-center p-2 rounded text-sm font-semibold cursor-pointer transition hover:scale-[1.02] bg-red-800/50 text-red-300 border border-red-700" onclick="showQuizModal()">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Prequiz Required! Click to start.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-1">
+                    <label class="block text-xs text-slate-400 mb-1">Trades Taken</label>
+                    <input type="number" id="dailyTrades" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm" placeholder="0">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs text-slate-400 mb-1">Net P&L ($)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-slate-500">$</span>
+                        <input type="number" id="dailyPnL" class="w-full bg-slate-900 border border-slate-600 rounded p-2 pl-7 text-white text-sm" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="md:col-span-1">
+                    <button onclick="submitDay()" id="submitDayBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-sm transition disabled:bg-slate-700 disabled:text-slate-500" disabled>
+                        Complete Day
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA TABLE -->
+        <div class="overflow-x-auto rounded-xl border border-slate-700">
+            <table class="w-full text-sm text-left text-slate-400">
+                <thead class="text-xs text-slate-300 uppercase bg-slate-800 border-b border-slate-700">
+                    <tr>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Day</th>
+                        <th class="px-4 py-3">Start Cap</th>
+                        <th class="px-4 py-3">Target %</th>
+                        <th class="px-4 py-3">Achieved %</th>
+                        <th class="px-4 py-3 text-right">P/L ($)</th>
+                        <th class="px-4 py-3 text-right">End Total</th>
+                        <th class="px-4 py-3 text-center">Game Score/Attempts</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody" class="divide-y divide-slate-800 bg-slate-900/50">
+                    <!-- Rows generated by JS -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- SECTION 4: EXPLANATORY NOTES -->
+        <div class="glass-panel rounded-xl p-6 border border-slate-700/50 mt-6">
+            <h3 class="text-lg font-bold text-yellow-500 mb-4"><i class="fas fa-info-circle mr-2"></i>Dashboard Explanations</h3>
+            <ul class="space-y-4 text-slate-400 text-sm">
+                <li>
+                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">1</span>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-slate-300">Challenge Status & Health:</p>
+                        The <span class="text-yellow-400">Mental Challenge Success</span> card tracks your overall accuracy across all successful attempts. The main table shows the attempts needed per day.
+                    </div>
+                </li>
+                <li>
+                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">2</span>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-slate-300">Future Projection:</p>
+                        Provides projections based on your initial goal, current average performance, and the target for the remaining days.
+                    </div>
+                </li>
+                <li>
+                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">3</span>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-slate-300">Log Today's Trading Results:</p>
+                        You must successfully complete the **Prequiz** before the "Complete Day" button activates. If you fail the quiz, you can retry immediately. The daily target dynamically adjusts based on your compounding capital.
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- NEW SECTION: DASHBOARD PURPOSE AND ABOUT ME -->
+        <div class="glass-panel rounded-xl p-6 border border-slate-700/50 mt-6">
+            <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-bullseye mr-2"></i>About This Challenge Dashboard</h3>
+
+            <div class="text-slate-400 text-sm space-y-4 mb-6">
+                <!-- About This Dashboard (~300 words) -->
+                <p>
+                    This dashboard is designed as a focused accountability tool for traders specializing in spot market operations, such as buying and selling coins on platforms like Binance. It moves beyond simple P&L tracking to incorporate psychological and systematic discipline, which are far more critical for long-term success.
+                </p>
+                <p>
+                    **Why 100 Days?** The 100-day structure provides a clear, achievable timeframe for mastering emotional control and compounding consistency. It forces the trader to focus on small, manageable daily gains rather than chasing large, high-risk returns. The system is engineered to track compounding interest, showing the exponential potential of steady, disciplined trading.
+                </p>
+                <p>
+                    **Discipline Through Gamification:** The core feature is the **Daily Focus Challenge** (Prequiz). This quick mental test serves as a mandatory gatekeeper before the trading day can be logged. It ensures the trader is in a state of high concentration, mental agility, and is not emotionally compromised (e.g., trading while distracted, tired, or angry) before executing trades. By tracking the number of attempts needed to pass this quiz, the trader gains valuable insight into their own psychological readiness and consistency. The **Account Health** bar visualizes how consistently the trader meets their daily compounding targets, offering immediate feedback on overall discipline.
+                </p>
+                <p>
+                    The projections section provides forward-looking insight, illustrating the power of compounding based on the initial goal versus the actual average performance achieved. In essence, this dashboard is your personalized system for building the habits of a profitable trader: focus, consistency, and systematic execution.
+                </p>
+                
+                <h4 class="text-md font-semibold text-cyan-300 pt-4"><i class="fas fa-user-astronaut mr-2"></i> About the Trader/Developer</h4>
+                
+                <!-- About Me (~50 words) -->
+                <p>
+                    This challenge was designed and is executed by Khizar, a dedicated enthusiast specializing in cryptocurrency spot trading on platforms like Binance. With a strong interest in financial technology and systematic investing, Khizar built this tool to enforce the critical disciplines of focus and consistent compounding, turning a personal goal into a 100-day, quantifiable mission.
+                </p>
+
+                <!-- Social Links -->
+                <div class="flex gap-4 pt-2">
+                    <a href="https://www.linkedin.com/in/khizar226/" target="_blank" class="flex items-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition shadow-lg shadow-blue-900/50 text-sm">
+                        <i class="fab fa-linkedin mr-2"></i> LinkedIn
+                    </a>
+                    <a href="https://www.instagram.com/khizar226" target="_blank" class="flex items-center bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded transition shadow-lg shadow-pink-900/50 text-sm">
+                        <i class="fab fa-instagram mr-2"></i> Instagram
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="h-20"></div> <!-- Spacer -->
+    </div>
+
+    <script>
+        // --- State Management ---
+        let appData = {
+            userName: '',
+            userAge: 0,
+            initialCapital: 0,
+            initialTargetPerc: 0,
+            startDate: null,
+            currentCapital: 0,
+            history: [], // { day, date, startCap, targetPerc, targetAmt, achievedPerc, pnl, endCap, trades }
+            gameHistory: [] // { day, date, finalScore, totalAttempts, isSuccess }
+        };
+
+        let currentQuiz = null;
+        let quizTimerId = null;
+        let quizStartTime = 0;
+        let currentDayAttemptCount = 0; // Tracks attempts for the current day being played
+
+        // --- Core Logic ---
+
+        function init() {
+            const saved = localStorage.getItem('trading100_v3'); // Updated version key for new features
+            if (saved) {
+                appData = JSON.parse(saved);
+                document.getElementById('setupModal').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                
+                const currentDayNum = appData.history.length + 1;
+                const lastGameDay = appData.gameHistory.length > 0 ? appData.gameHistory[appData.gameHistory.length - 1].day : 0;
+                const isGameSuccess = appData.gameHistory.length > 0 && appData.gameHistory[appData.gameHistory.length - 1].day === currentDayNum && appData.gameHistory[appData.gameHistory.length - 1].isSuccess;
+
+                updateGameStatus(currentDayNum, isGameSuccess);
+
+                renderDashboard();
+                renderTable();
+            } else {
+                document.getElementById('setupModal').classList.remove('hidden');
+                document.getElementById('initialTargetPerc').addEventListener('input', updateSetupProjection);
+                document.getElementById('initCapital').addEventListener('input', updateSetupProjection);
+            }
+        }
+
+        function updateSetupProjection() {
+            const capital = parseFloat(document.getElementById('initCapital').value) || 0;
+            const targetPerc = parseFloat(document.getElementById('initialTargetPerc').value) || 0;
+            
+            if (capital > 0 && targetPerc > 0) {
+                let projectedCap = capital;
+                for(let i = 0; i < 100; i++) {
+                    projectedCap *= (1 + targetPerc / 100);
+                }
+                document.getElementById('initialProjectionDisplay').innerText = formatMoney(projectedCap);
+            } else {
+                document.getElementById('initialProjectionDisplay').innerText = '$0.00';
+            }
+        }
+
+        function startChallenge() {
+            const caps = parseFloat(document.getElementById('initCapital').value);
+            const date = document.getElementById('startDate').value;
+            const name = document.getElementById('userName').value.trim();
+            const age = parseInt(document.getElementById('userAge').value);
+            const initialPerc = parseFloat(document.getElementById('initialTargetPerc').value);
+
+            if (!caps || !date || name === '' || isNaN(age) || isNaN(initialPerc)) {
+                return alert("Please fill all required fields correctly (Capital, Name, Age, Target %, Start Date).");
+            }
+
+            appData.initialCapital = caps;
+            appData.currentCapital = caps;
+            appData.startDate = date;
+            appData.userName = name;
+            appData.userAge = age;
+            appData.initialTargetPerc = initialPerc;
+            appData.history = [];
+            appData.gameHistory = [];
+            currentDayAttemptCount = 0; // Reset for Day 1
+            
+            saveData();
+            document.getElementById('setupModal').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            renderDashboard();
+            renderTable();
+        }
+
+        function getTargetPercent(dayNum) {
+            let basePerc = appData.initialTargetPerc;
+            if (dayNum > 80) {
+                const daysOver = dayNum - 80;
+                basePerc -= (daysOver * 0.05); 
+            }
+            return Math.max(0.5, basePerc);
+        }
+        
+        function updateGameStatus(currentDayNum, isSuccessful) {
+            const gameStatusIndicator = document.getElementById('gameStatusIndicator');
+            const submitDayBtn = document.getElementById('submitDayBtn');
+            
+            if (currentDayNum > 100) {
+                gameStatusIndicator.innerText = "Challenge Complete!";
+                gameStatusIndicator.classList.remove('bg-red-800/50', 'bg-emerald-800/50', 'text-red-300', 'border-red-700');
+                gameStatusIndicator.classList.add('bg-slate-700/50', 'text-slate-400', 'border-slate-600');
+                submitDayBtn.disabled = true;
+                return;
+            }
+
+            if (!isSuccessful) {
+                // Game not played successfully for today
+                gameStatusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> Prequiz Required! Click to start.';
+                gameStatusIndicator.classList.remove('bg-emerald-800/50', 'text-emerald-300', 'border-emerald-700');
+                gameStatusIndicator.classList.add('bg-red-800/50', 'text-red-300', 'border-red-700');
+                submitDayBtn.disabled = true;
+            } else {
+                // Game played successfully for today
+                const attempts = appData.gameHistory.find(g => g.day === currentDayNum)?.totalAttempts || 1;
+                gameStatusIndicator.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Prequiz Complete (Attempt ${attempts}). Log Results.`;
+                gameStatusIndicator.classList.remove('bg-red-800/50', 'text-red-300', 'border-red-700');
+                gameStatusIndicator.classList.add('bg-emerald-800/50', 'text-emerald-300', 'border-emerald-700');
+                submitDayBtn.disabled = false;
+            }
+        }
+
+        function submitDay() {
+            const pnl = parseFloat(document.getElementById('dailyPnL').value);
+            const trades = parseInt(document.getElementById('dailyTrades').value) || 0;
+            const currentDayNum = appData.history.length + 1;
+            
+            // Check Prequiz Status before submitting
+            const isGameSuccess = appData.gameHistory.length > 0 && appData.gameHistory[appData.gameHistory.length - 1].day === currentDayNum && appData.gameHistory[appData.gameHistory.length - 1].isSuccess;
+            
+            if (!isGameSuccess) {
+                // Using a custom message instead of alert()
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = '<p class="text-red-400 font-semibold">ERROR: Please successfully complete the Daily Focus Challenge before logging results for Day ' + currentDayNum + '</p>';
+                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-red-700 transition duration-300 transform scale-100';
+                document.body.appendChild(messageBox);
+                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
+                return; 
+            }
+            if (isNaN(pnl)) {
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = '<p class="text-red-400 font-semibold">ERROR: Please enter a valid P&L amount.</p>';
+                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-red-700 transition duration-300 transform scale-100';
+                document.body.appendChild(messageBox);
+                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
+                return; 
+            }
+            if (currentDayNum > 100) {
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = '<p class="text-yellow-400 font-semibold">Challenge complete! Cannot log more days.</p>';
+                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-yellow-700 transition duration-300 transform scale-100';
+                document.body.appendChild(messageBox);
+                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
+                return; 
+            }
+
+            // Calculate Date
+            let dateObj = new Date(appData.startDate);
+            dateObj.setDate(dateObj.getDate() + (currentDayNum - 1));
+            
+            const startCap = appData.currentCapital;
+            const targetPerc = getTargetPercent(currentDayNum);
+            const targetAmt = startCap * (targetPerc / 100);
+            
+            const achievedPerc = (pnl / startCap) * 100;
+            const endCap = startCap + pnl;
+
+            // Update State
+            appData.currentCapital = endCap;
+            appData.history.push({
+                day: currentDayNum,
+                date: dateObj.toISOString().split('T')[0],
+                startCap: startCap,
+                targetPerc: targetPerc,
+                targetAmt: targetAmt,
+                achievedPerc: achievedPerc,
+                pnl: pnl,
+                endCap: endCap,
+                trades: trades
+            });
+
+            // Prepare for next day
+            currentDayAttemptCount = 0;
+            document.getElementById('dailyPnL').value = '';
+            document.getElementById('dailyTrades').value = '';
+
+            saveData();
+            renderDashboard();
+            renderTable();
+            
+            // Update game status for the next day (which is always 'Required' now)
+            updateGameStatus(currentDayNum + 1, false);
+        }
+
+        function saveData() {
+            localStorage.setItem('trading100_v3', JSON.stringify(appData));
+        }
+
+        function confirmReset() {
+             const result = window.confirm("Are you sure? This will wipe all progress.");
+             if(result) {
+                localStorage.removeItem('trading100_v3');
+                location.reload();
+             }
+        }
+
+        function exportData() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Day,Start Capital,Target %,Achieved %,PnL,End Capital,Trades,Game Score,Total Attempts,Game Success\n";
+            
+            appData.history.forEach((row) => {
+                const gameEntry = appData.gameHistory.find(g => g.day === row.day) || {};
+                const score = gameEntry.finalScore !== undefined ? gameEntry.finalScore : 'N/A';
+                const attempts = gameEntry.totalAttempts !== undefined ? gameEntry.totalAttempts : 'N/A';
+                const success = gameEntry.isSuccess !== undefined ? (gameEntry.isSuccess ? 'Y' : 'N') : 'N/A';
+                
+                let rowStr = `${row.date},${row.day},${row.startCap.toFixed(2)},${row.targetPerc.toFixed(2)},${row.achievedPerc.toFixed(2)},${row.pnl.toFixed(2)},${row.endCap.toFixed(2)},${row.trades},${score},${attempts},${success}`;
+                csvContent += rowStr + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${appData.userName.replace(/\s/g, '_')}_trading_challenge_data.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Rendering ---
+
+        function renderDashboard() {
+            const dayNum = appData.history.length + 1;
+            const currentCapital = appData.currentCapital;
+            const initialCapital = appData.initialCapital;
+
+            // Header User Info
+            document.getElementById('dispUserName').innerText = appData.userName;
+            document.getElementById('dispUserAge').innerText = appData.userAge;
+
+            // 1. Basic Stats
+            document.getElementById('dispCurrentBalance').innerText = formatMoney(currentCapital);
+            document.getElementById('inputDayNum').innerText = dayNum;
+            document.getElementById('dispDay').innerText = Math.min(dayNum, 100);
+            document.getElementById('dayProgressBar').style.width = `${Math.min(dayNum, 100)}%`;
+            
+            // Live Target Display (Section 3)
+            const liveTargetPerc = getTargetPercent(dayNum);
+            const liveTargetAmt = currentCapital * (liveTargetPerc / 100);
+            document.getElementById('currentTargetPerc').innerText = liveTargetPerc.toFixed(1) + "%";
+            document.getElementById('currentTargetAmt').innerText = formatMoney(liveTargetAmt);
+
+
+            // Total Return %
+            const totalReturn = ((currentCapital - initialCapital) / initialCapital) * 100;
+            const elTotalReturn = document.getElementById('dispTotalPnL');
+            elTotalReturn.innerHTML = `<span class="${totalReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}">${totalReturn.toFixed(2)}%</span> Total Return`;
+
+            // 2. Health Bar Logic (Consistency)
+            let health = 100;
+            if (appData.history.length > 0) {
+                let recentScore = 0;
+                const lookback = Math.min(appData.history.length, 10);
+                for(let i=0; i<lookback; i++) {
+                    const entry = appData.history[appData.history.length - 1 - i];
+                    if (entry.achievedPerc >= entry.targetPerc) recentScore += 10;
+                    else if (entry.pnl >= 0) recentScore += 2;
+                    else recentScore -= 10;
+                }
+                health = Math.max(0, Math.min(100, 50 + recentScore));
+            }
+
+            const elHealth = document.getElementById('healthFill');
+            elHealth.style.width = `${health}%`;
+            if (health > 75) elHealth.className = "health-fill h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]";
+            else if (health > 40) elHealth.className = "health-fill h-full bg-gradient-to-r from-yellow-600 to-yellow-400";
+            else elHealth.className = "health-fill h-full bg-gradient-to-r from-red-600 to-red-500";
+            
+            // 4. Game Accuracy
+            const successfulGames = appData.gameHistory.filter(g => g.isSuccess).length;
+            const totalDaysAttempted = appData.gameHistory.length;
+            const accuracy = totalDaysAttempted > 0 ? (successfulGames / totalDaysAttempted) * 100 : 0;
+            document.getElementById('dispGameAccuracy').innerText = accuracy.toFixed(1) + "%";
+            
+            const gameStatusEl = document.getElementById('dispGameStatus');
+            gameStatusEl.classList.remove('text-emerald-400', 'text-yellow-400', 'text-red-400');
+            if (accuracy >= 70) {
+                gameStatusEl.innerText = "Excellent Focus";
+                gameStatusEl.classList.add('text-emerald-400');
+            } else if (accuracy >= 40) {
+                gameStatusEl.innerText = "Stable";
+                gameStatusEl.classList.add('text-yellow-400');
+            } else {
+                gameStatusEl.innerText = "Need Practice";
+                gameStatusEl.classList.add('text-red-400');
+            }
+
+
+            // 3. Projections
+            document.getElementById('initialGoalPerc').innerText = `${appData.initialTargetPerc.toFixed(1)}%`;
+            let initialGoalCap = appData.initialCapital;
+            for(let i=0; i<100; i++) {
+                initialGoalCap *= (1 + appData.initialTargetPerc / 100);
+            }
+            document.getElementById('initialGoal100').innerText = formatMoney(initialGoalCap);
+
+            let avgDailyPerc = 0;
+            if (appData.history.length > 0) {
+                const sumPerc = appData.history.reduce((acc, curr) => acc + curr.achievedPerc, 0);
+                avgDailyPerc = sumPerc / appData.history.length;
+            }
+            document.getElementById('dispAvgReturnPerc').innerText = avgDailyPerc.toFixed(2) + "%";
+            
+            const daysLeft = 100 - (dayNum - 1);
+
+            function project(startCap, dailyPerc, days) {
+                let simCap = startCap;
+                for(let i=0; i<days; i++) {
+                    simCap = simCap * (1 + (dailyPerc/100));
+                }
+                return simCap;
+            }
+            
+            const projActual = project(currentCapital, avgDailyPerc, daysLeft);
+            document.getElementById('proj100Actual').innerText = formatMoney(projActual);
+
+            const targetProj = project(currentCapital, getTargetPercent(dayNum), daysLeft);
+            document.getElementById('proj100Target').innerText = formatMoney(targetProj);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('logBody');
+            tbody.innerHTML = '';
+
+            // Show in reverse order (newest first)
+            [...appData.history].reverse().forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800 transition";
+                
+                const isProfitable = row.pnl >= 0;
+                const pnlClass = isProfitable ? "text-emerald-400" : "text-red-400";
+                
+                const gameEntry = appData.gameHistory.find(g => g.day === row.day);
+                let gameDisplay = '<span class="text-slate-600">N/A</span>';
+
+                if (gameEntry) {
+                    const score = gameEntry.finalScore || 0;
+                    const attempts = gameEntry.totalAttempts || 1;
+                    gameDisplay = `<span class="${gameEntry.isSuccess ? 'text-emerald-400' : 'text-red-400'}">${score}/5 (${attempts})</span>`;
+                }
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-slate-400">${row.date}</td>
+                    <td class="px-4 py-3 font-mono text-slate-300">Day ${row.day}</td>
+                    <td class="px-4 py-3 font-mono text-slate-500">${formatMoney(row.startCap)}</td>
+                    <td class="px-4 py-3 font-mono text-cyan-400">${row.targetPerc.toFixed(1)}%</td>
+                    <td class="px-4 py-3 font-mono ${row.achievedPerc >= row.targetPerc ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${row.achievedPerc.toFixed(2)}%</td>
+                    <td class="px-4 py-3 font-mono font-bold text-right ${pnlClass}">${row.pnl > 0 ? '+' : ''}${formatMoney(row.pnl)}</td>
+                    <td class="px-4 py-3 font-mono text-white text-right font-bold">${formatMoney(row.endCap)}</td>
+                    <td class="px-4 py-3 text-center font-bold">${gameDisplay}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Utility ---
+
+        function formatMoney(num) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+        }
+
+        // --- Daily Quiz Logic ---
+        
+        const QUIZ_DURATION = 10; // seconds
+
+        function generateQuizQuestion() {
+            const num1 = Math.floor(Math.random() * 50) + 10;
+            const num2 = Math.floor(Math.random() * 50) + 10;
+            const operator = Math.random() < 0.5 ? '+' : '-';
+            
+            let question, answer;
+            if (operator === '+') {
+                question = `${num1} ${operator} ${num2}`;
+                answer = num1 + num2;
+            } else {
+                const large = Math.max(num1, num2);
+                const small = Math.min(num1, num2);
+                question = `${large} - ${small}`;
+                answer = large - small;
+            }
+
+            return { question, answer };
+        }
+
+        function showQuizModal() {
+            const currentDayNum = appData.history.length + 1;
+            
+            // Check if game is already successfully completed for today
+            const gameEntry = appData.gameHistory.find(g => g.day === currentDayNum);
+            if (gameEntry && gameEntry.isSuccess) {
+                return; // Do nothing if already done
+            }
+            if (currentDayNum > 100) return;
+
+            // Reset UI for fresh attempt
+            document.getElementById('quizAnswer').value = '';
+            document.getElementById('quizAnswer').disabled = false;
+            document.getElementById('quizTimer').innerText = `${QUIZ_DURATION}s`;
+            document.getElementById('quizQuestion').classList.remove('text-red-400', 'text-emerald-400');
+            document.getElementById('quizMessage').classList.add('hidden');
+            document.getElementById('quizSubmitBtn').classList.remove('hidden');
+            document.getElementById('quizRetryBtn').classList.add('hidden');
+            document.getElementById('quizCloseBtn').classList.add('hidden');
+            document.getElementById('quizModal').classList.remove('hidden');
+            
+            // Determine attempt count
+            currentDayAttemptCount = (gameEntry?.totalAttempts || 0) + 1;
+            document.getElementById('quizAttemptCount').innerText = currentDayAttemptCount;
+            
+            currentQuiz = generateQuizQuestion();
+            document.getElementById('quizQuestion').innerText = currentQuiz.question;
+            
+            quizStartTime = Date.now();
+            document.getElementById('quizAnswer').focus();
+
+            let timeLeft = QUIZ_DURATION;
+            document.getElementById('quizTimer').innerText = `${timeLeft}s`;
+
+            quizTimerId = setInterval(() => {
+                timeLeft--;
+                document.getElementById('quizTimer').innerText = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(quizTimerId);
+                    handleQuizFailure('Time out! You must answer faster.');
+                }
+            }, 1000);
+        }
+        
+        function handleQuizFailure(message) {
+            document.getElementById('quizAnswer').disabled = true;
+            document.getElementById('quizQuestion').classList.add('text-red-400');
+            document.getElementById('quizMessage').innerText = message;
+            document.getElementById('quizMessage').classList.remove('hidden');
+            document.getElementById('quizSubmitBtn').classList.add('hidden');
+            document.getElementById('quizRetryBtn').classList.remove('hidden');
+            document.getElementById('quizCloseBtn').classList.remove('hidden');
+        }
+
+        function checkQuizAnswer() {
+            if (!currentQuiz) return;
+            clearInterval(quizTimerId);
+            const userAnswer = parseInt(document.getElementById('quizAnswer').value);
+            
+            if (!isNaN(userAnswer) && userAnswer === currentQuiz.answer) {
+                // SUCCESS
+                document.getElementById('quizAnswer').disabled = true;
+                document.getElementById('quizQuestion').classList.add('text-emerald-400');
+                document.getElementById('quizMessage').innerText = "Correct! Focus verified.";
+                document.getElementById('quizMessage').classList.remove('hidden');
+                document.getElementById('quizSubmitBtn').classList.add('hidden');
+                document.getElementById('quizRetryBtn').classList.add('hidden');
+                document.getElementById('quizCloseBtn').classList.remove('hidden');
+                
+                recordQuizResult(true, 5); // 5/5 score on success
+                // Automatic close after 1 second
+                setTimeout(() => { closeQuizModal(); }, 1000);
+
+            } else {
+                // FAILURE
+                const message = `Incorrect. The correct answer was ${currentQuiz.answer}.`;
+                handleQuizFailure(message);
+                recordQuizResult(false, 0); // 0/5 score on failure
+            }
+        }
+
+        function retryQuiz() {
+            // Simply re-show the modal, which increments the attempt count
+            showQuizModal();
+        }
+
+        function closeQuizModal() {
+            clearInterval(quizTimerId);
+            document.getElementById('quizModal').classList.add('hidden');
+        }
+
+        function recordQuizResult(isSuccess, finalScore) {
+            const currentDayNum = appData.history.length + 1;
+            let dateObj = new Date(appData.startDate);
+            dateObj.setDate(dateObj.getDate() + (currentDayNum - 1));
+
+            // Find existing entry for today
+            const existingIndex = appData.gameHistory.findIndex(g => g.day === currentDayNum);
+            
+            const newEntry = {
+                day: currentDayNum,
+                date: dateObj.toISOString().split('T')[0],
+                finalScore: isSuccess ? finalScore : 0,
+                totalAttempts: currentDayAttemptCount, // Use the current global attempt counter
+                isSuccess: isSuccess
+            };
+
+            if (existingIndex !== -1) {
+                // Update existing entry (only if successful, or if we want to log the final failed attempt)
+                appData.gameHistory[existingIndex] = newEntry;
+            } else {
+                // Add new entry
+                appData.gameHistory.push(newEntry);
+            }
+
+            saveData();
+            renderDashboard();
+            updateGameStatus(currentDayNum, isSuccess);
+        }
+        
+        // Init App
+        init();
+
+    </script>
+</body>
+</html>
