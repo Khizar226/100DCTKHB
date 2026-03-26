@@ -1,898 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100 Day Trading Challenge</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
-        }
-        
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; 
-        }
-
-        .health-bar-container {
-            box-shadow: 0 0 10px rgba(0,0,0,0.5) inset;
-        }
-        
-        .health-fill {
-            transition: width 0.5s ease-in-out, background-color 0.5s ease;
-        }
-
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>100 Day Trading Challenge</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body>
 
-    <!-- SETUP MODAL -->
-    <div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
-        <div class="bg-slate-800 p-8 rounded-xl border border-slate-600 max-w-md w-full shadow-2xl">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-2"><i class="fas fa-rocket mr-2"></i>New Challenge Setup</h2>
-            <p class="text-slate-400 mb-6 text-sm">Personalize your 100-day journey.</p>
-            
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Your Name</label>
-                        <input type="text" id="userName" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. Alex">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Your Age</label>
-                        <input type="number" id="userAge" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 25">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Initial Capital ($)</label>
-                    <input type="number" id="initCapital" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 1000">
-                </div>
+<!-- =====================================================
+     TOAST CONTAINER
+     ===================================================== -->
+<div id="toast-container"></div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Initial Target % (Daily)</label>
-                    <input type="number" id="initialTargetPerc" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none" placeholder="e.g. 3.0">
-                    <p class="text-xs text-slate-500 mt-1">This is your ideal compounding goal.</p>
-                </div>
+<!-- =====================================================
+     SETUP MODAL
+     ===================================================== -->
+<div id="setupModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title text-emerald">
+      <i class="fas fa-rocket" style="margin-right:8px"></i>New Challenge Setup
+    </div>
+    <div class="modal-sub">Configure your 100-day compounding journey.</div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">Start Date</label>
-                    <input type="date" id="startDate" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 focus:outline-none">
-                </div>
-
-                <div class="text-center bg-slate-700/50 p-3 rounded-lg text-sm">
-                    <p class="text-slate-400">100-Day Target with this percentage:</p>
-                    <p id="initialProjectionDisplay" class="text-lg font-bold text-yellow-400 mono mt-1">$0.00</p>
-                </div>
-
-                <button onclick="startChallenge()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg shadow-emerald-900/50">
-                    Initialize Protocol
-                </button>
-            </div>
-        </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" id="userName" placeholder="e.g. Khizar" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Age</label>
+        <input type="number" id="userAge" placeholder="e.g. 25" />
+      </div>
     </div>
 
-    <!-- DAILY QUIZ MODAL -->
-    <div id="quizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
-        <div class="bg-slate-800 p-8 rounded-xl border border-slate-600 max-w-lg w-full shadow-2xl">
-            <h2 class="text-2xl font-bold text-yellow-400 mb-2 text-center"><i class="fas fa-brain mr-2"></i>Daily Focus Challenge</h2>
-            <p class="text-slate-400 mb-6 text-sm text-center">Attempt: <span id="quizAttemptCount" class="font-bold text-yellow-300">1</span></p>
-            
-            <div id="quizContent" class="text-center space-y-6">
-                <div class="text-xl text-slate-300">Time Left: <span id="quizTimer" class="font-bold text-red-400">10s</span></div>
-                <div class="text-5xl font-extrabold text-white mono" id="quizQuestion"></div>
-                
-                <div>
-                    <input type="number" id="quizAnswer" class="w-full max-w-xs text-center bg-slate-900 border border-slate-600 rounded p-3 text-white text-3xl mono focus:border-yellow-500 focus:outline-none" placeholder="?" autofocus>
-                </div>
-            </div>
-
-            <div id="quizMessage" class="text-center text-red-400 text-lg font-semibold my-4 hidden"></div>
-
-            <div class="mt-6 text-center flex gap-4 justify-center">
-                <button onclick="checkQuizAnswer()" id="quizSubmitBtn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded transition shadow-lg shadow-yellow-900/50">
-                    Submit Answer
-                </button>
-                <button onclick="retryQuiz()" id="quizRetryBtn" class="bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-8 rounded transition shadow-lg shadow-red-900/50 hidden">
-                    <i class="fas fa-redo mr-2"></i> Retry Focus
-                </button>
-                <button onclick="closeQuizModal()" id="quizCloseBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 px-8 rounded transition shadow-lg hidden">
-                    <i class="fas fa-times mr-2"></i> Close
-                </button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label class="form-label">Initial Capital (USD)</label>
+      <input type="number" id="initCapital" placeholder="e.g. 500" />
     </div>
 
-
-    <!-- MAIN APP -->
-    <div id="app" class="max-w-7xl mx-auto hidden">
-        
-        <!-- HEADER & ACTIONS -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                    100 Day Spot Challenge
-                </h1>
-                <p class="text-slate-400 text-sm mt-1 tracking-wider">
-                    Protocol initialized by <span id="dispUserName" class="font-semibold text-white"></span> (<span id="dispUserAge"></span>)
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="exportData()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm transition border border-slate-600">
-                    <i class="fas fa-file-csv mr-2"></i>Export
-                </button>
-                <button onclick="confirmReset()" class="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded text-sm transition">
-                    <i class="fas fa-skull mr-2"></i>Reset
-                </button>
-            </div>
-        </div>
-
-        <!-- SECTION 1: DASHBOARD GRID -->
-        <div class="flex items-center mb-3">
-            <h2 class="text-xl font-bold text-white">Challenge Status</h2>
-            <span class="ml-3 w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold">1</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            
-            <!-- CARD 1: Current Balance -->
-            <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500">
-                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Current Balance</div>
-                <div class="text-3xl font-bold mt-1 mono" id="dispCurrentBalance">$0.00</div>
-                <div class="text-xs mt-2" id="dispTotalPnL">
-                    <span class="text-emerald-400">+0.00%</span> Total Return
-                </div>
-            </div>
-
-            <!-- CARD 2: Day Progress -->
-            <div class="glass-panel p-5 rounded-xl border-l-4 border-cyan-500">
-                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Day Progress</div>
-                <div class="flex items-baseline mt-1 gap-2">
-                    <div class="text-3xl font-bold mono" id="dispDay">1</div>
-                    <div class="text-slate-500 text-sm">/ 100</div>
-                </div>
-                <!-- Mini Progress Bar -->
-                <div class="w-full bg-slate-700 h-1.5 mt-4 rounded-full overflow-hidden">
-                    <div id="dayProgressBar" class="bg-cyan-500 h-full" style="width: 1%"></div>
-                </div>
-            </div>
-
-            <!-- CARD 3: Account Health / Discipline -->
-            <div class="glass-panel p-5 rounded-xl border-l-4 border-purple-500">
-                <div class="flex justify-between items-center mb-2">
-                    <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Account Health (Consistency)</div>
-                    <i class="fas fa-dumbbell text-purple-400"></i>
-                </div>
-                <div class="health-bar-container w-full h-8 bg-slate-900 rounded border border-slate-700 relative overflow-hidden">
-                    <div class="absolute inset-0 z-10 flex justify-between px-2">
-                        <div class="w-px h-full bg-slate-800/50"></div>
-                        <div class="w-px h-full bg-slate-800/50"></div>
-                        <div class="w-px h-full bg-slate-800/50"></div>
-                        <div class="w-px h-full bg-slate-800/50"></div>
-                    </div>
-                    <div id="healthFill" class="health-fill h-full bg-gradient-to-r from-red-500 via-yellow-400 to-emerald-500" style="width: 100%;"></div>
-                </div>
-                <div class="flex justify-between text-xs mt-2 text-slate-500">
-                    <span>Critical</span>
-                    <span>Stable</span>
-                    <span>Thriving</span>
-                </div>
-            </div>
-
-            <!-- CARD 4: Game Accuracy -->
-            <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500">
-                <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Mental Challenge Success</div>
-                <div class="flex items-baseline mt-1 gap-2">
-                    <div class="text-3xl font-bold mono" id="dispGameAccuracy">0.0%</div>
-                </div>
-                <div class="text-xs mt-2 text-slate-500">
-                    <span id="dispGameStatus" class="font-bold text-yellow-400">Need Practice</span> Overall Accuracy
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 2: PROJECTIONS PANEL -->
-        <div class="glass-panel rounded-xl p-4 mb-6 border border-slate-700/50">
-            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center">
-                <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold mr-2">2</span>
-                <i class="fas fa-chart-line mr-2 text-blue-400"></i>
-                Future Projection
-            </h3>
-            <div class="grid grid-cols-3 gap-4 text-center">
-                <div class="bg-slate-800/50 rounded p-2">
-                    <div class="text-xs text-slate-500">Initial Goal (<span id="initialGoalPerc"></span>)</div>
-                    <div class="text-lg font-bold text-yellow-300 mono" id="initialGoal100">$0.00</div>
-                </div>
-                <div class="bg-slate-800/50 rounded p-2">
-                    <div class="text-xs text-slate-500">Current Average (<span id="dispAvgReturnPerc">0.0%</span>)</div>
-                    <div class="text-lg font-bold text-emerald-300 mono" id="proj100Actual">$0.00</div>
-                </div>
-                <div class="bg-slate-800/50 rounded p-2">
-                    <div class="text-xs text-slate-500">Target for Day 100 (Best Case)</div>
-                    <div class="text-xl font-bold text-emerald-300 mono" id="proj100Target">$0.00</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 3: INPUT FORM FOR CURRENT DAY -->
-        <div class="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 shadow-lg">
-            <h3 class="text-sm font-bold text-white mb-4 flex items-center">
-                <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold mr-2">3</span>
-                <span class="bg-emerald-600 w-6 h-6 rounded flex items-center justify-center text-xs mr-2" id="inputDayNum">1</span>
-                Log Today's Trading Results
-            </h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center mb-4">
-                <div class="md:col-span-2 bg-slate-900 p-2 rounded border border-slate-700">
-                    <div class="text-xs text-slate-400 uppercase tracking-wider">Today's Compounding Target</div>
-                    <div class="flex gap-4">
-                        <span id="currentTargetPerc" class="text-cyan-400 font-bold text-lg mono">0.0%</span>
-                        <span id="currentTargetAmt" class="text-white font-bold text-lg mono">$0.00</span>
-                    </div>
-                </div>
-                <div id="gameStatusIndicator" class="md:col-span-2 text-center p-2 rounded text-sm font-semibold cursor-pointer transition hover:scale-[1.02] bg-red-800/50 text-red-300 border border-red-700" onclick="showQuizModal()">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> Prequiz Required! Click to start.
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="md:col-span-1">
-                    <label class="block text-xs text-slate-400 mb-1">Trades Taken</label>
-                    <input type="number" id="dailyTrades" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm" placeholder="0">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs text-slate-400 mb-1">Net P&L ($)</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-2 text-slate-500">$</span>
-                        <input type="number" id="dailyPnL" class="w-full bg-slate-900 border border-slate-600 rounded p-2 pl-7 text-white text-sm" placeholder="0.00">
-                    </div>
-                </div>
-                <div class="md:col-span-1">
-                    <button onclick="submitDay()" id="submitDayBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-sm transition disabled:bg-slate-700 disabled:text-slate-500" disabled>
-                        Complete Day
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- DATA TABLE -->
-        <div class="overflow-x-auto rounded-xl border border-slate-700">
-            <table class="w-full text-sm text-left text-slate-400">
-                <thead class="text-xs text-slate-300 uppercase bg-slate-800 border-b border-slate-700">
-                    <tr>
-                        <th class="px-4 py-3">Date</th>
-                        <th class="px-4 py-3">Day</th>
-                        <th class="px-4 py-3">Start Cap</th>
-                        <th class="px-4 py-3">Target %</th>
-                        <th class="px-4 py-3">Achieved %</th>
-                        <th class="px-4 py-3 text-right">P/L ($)</th>
-                        <th class="px-4 py-3 text-right">End Total</th>
-                        <th class="px-4 py-3 text-center">Game Score/Attempts</th>
-                    </tr>
-                </thead>
-                <tbody id="logBody" class="divide-y divide-slate-800 bg-slate-900/50">
-                    <!-- Rows generated by JS -->
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- SECTION 4: EXPLANATORY NOTES -->
-        <div class="glass-panel rounded-xl p-6 border border-slate-700/50 mt-6">
-            <h3 class="text-lg font-bold text-yellow-500 mb-4"><i class="fas fa-info-circle mr-2"></i>Dashboard Explanations</h3>
-            <ul class="space-y-4 text-slate-400 text-sm">
-                <li>
-                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">1</span>
-                    <div class="overflow-hidden">
-                        <p class="font-semibold text-slate-300">Challenge Status & Health:</p>
-                        The <span class="text-yellow-400">Mental Challenge Success</span> card tracks your overall accuracy across all successful attempts. The main table shows the attempts needed per day.
-                    </div>
-                </li>
-                <li>
-                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">2</span>
-                    <div class="overflow-hidden">
-                        <p class="font-semibold text-slate-300">Future Projection:</p>
-                        Provides projections based on your initial goal, current average performance, and the target for the remaining days.
-                    </div>
-                </li>
-                <li>
-                    <span class="w-5 h-5 bg-yellow-500 text-black text-xs rounded-full flex items-center justify-center font-extrabold float-left mr-3 mt-1">3</span>
-                    <div class="overflow-hidden">
-                        <p class="font-semibold text-slate-300">Log Today's Trading Results:</p>
-                        You must successfully complete the **Prequiz** before the "Complete Day" button activates. If you fail the quiz, you can retry immediately. The daily target dynamically adjusts based on your compounding capital.
-                    </div>
-                </li>
-            </ul>
-        </div>
-        
-        <!-- NEW SECTION: DASHBOARD PURPOSE AND ABOUT ME -->
-        <div class="glass-panel rounded-xl p-6 border border-slate-700/50 mt-6">
-            <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-bullseye mr-2"></i>About This Challenge Dashboard</h3>
-
-            <div class="text-slate-400 text-sm space-y-4 mb-6">
-                <!-- About This Dashboard (~300 words) -->
-                <p>
-                    This dashboard is designed as a focused accountability tool for traders specializing in spot market operations, such as buying and selling coins on platforms like Binance. It moves beyond simple P&L tracking to incorporate psychological and systematic discipline, which are far more critical for long-term success.
-                </p>
-                <p>
-                    **Why 100 Days?** The 100-day structure provides a clear, achievable timeframe for mastering emotional control and compounding consistency. It forces the trader to focus on small, manageable daily gains rather than chasing large, high-risk returns. The system is engineered to track compounding interest, showing the exponential potential of steady, disciplined trading.
-                </p>
-                <p>
-                    **Discipline Through Gamification:** The core feature is the **Daily Focus Challenge** (Prequiz). This quick mental test serves as a mandatory gatekeeper before the trading day can be logged. It ensures the trader is in a state of high concentration, mental agility, and is not emotionally compromised (e.g., trading while distracted, tired, or angry) before executing trades. By tracking the number of attempts needed to pass this quiz, the trader gains valuable insight into their own psychological readiness and consistency. The **Account Health** bar visualizes how consistently the trader meets their daily compounding targets, offering immediate feedback on overall discipline.
-                </p>
-                <p>
-                    The projections section provides forward-looking insight, illustrating the power of compounding based on the initial goal versus the actual average performance achieved. In essence, this dashboard is your personalized system for building the habits of a profitable trader: focus, consistency, and systematic execution.
-                </p>
-                
-                <h4 class="text-md font-semibold text-cyan-300 pt-4"><i class="fas fa-user-astronaut mr-2"></i> About the Trader/Developer</h4>
-                
-                <!-- About Me (~50 words) -->
-                <p>
-                    This challenge was designed and is executed by Khizar, a dedicated enthusiast specializing in cryptocurrency spot trading on platforms like Binance. With a strong interest in financial technology and systematic investing, Khizar built this tool to enforce the critical disciplines of focus and consistent compounding, turning a personal goal into a 100-day, quantifiable mission.
-                </p>
-
-                <!-- Social Links -->
-                <div class="flex gap-4 pt-2">
-                    <a href="https://www.linkedin.com/in/khizar226/" target="_blank" class="flex items-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition shadow-lg shadow-blue-900/50 text-sm">
-                        <i class="fab fa-linkedin mr-2"></i> LinkedIn
-                    </a>
-                    <a href="https://www.instagram.com/khizar226" target="_blank" class="flex items-center bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded transition shadow-lg shadow-pink-900/50 text-sm">
-                        <i class="fab fa-instagram mr-2"></i> Instagram
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="h-20"></div> <!-- Spacer -->
+    <div class="form-group">
+      <label class="form-label">Daily Target % (Days 1–50)</label>
+      <input type="number" id="initialTargetPerc" placeholder="e.g. 3.0" step="0.1" />
+      <div class="form-hint">After Day 50, target reduces gradually. Day 90+ locks to ~1%.</div>
     </div>
 
-    <script>
-        // --- State Management ---
-        let appData = {
-            userName: '',
-            userAge: 0,
-            initialCapital: 0,
-            initialTargetPerc: 0,
-            startDate: null,
-            currentCapital: 0,
-            history: [], // { day, date, startCap, targetPerc, targetAmt, achievedPerc, pnl, endCap, trades }
-            gameHistory: [] // { day, date, finalScore, totalAttempts, isSuccess }
-        };
+    <div class="form-group">
+      <label class="form-label">Start Date</label>
+      <input type="date" id="startDate" />
+    </div>
 
-        let currentQuiz = null;
-        let quizTimerId = null;
-        let quizStartTime = 0;
-        let currentDayAttemptCount = 0; // Tracks attempts for the current day being played
+    <div class="projection-preview mb-16">
+      <div class="projection-preview__label">Estimated Day 100 Balance (at your target %)</div>
+      <div class="projection-preview__value" id="initialProjectionDisplay">$0.00</div>
+    </div>
 
-        // --- Core Logic ---
+    <button class="btn btn-primary w-full" onclick="startChallenge()">
+      <i class="fas fa-play"></i> Initialize Protocol
+    </button>
+  </div>
+</div>
 
-        function init() {
-            const saved = localStorage.getItem('trading100_v3'); // Updated version key for new features
-            if (saved) {
-                appData = JSON.parse(saved);
-                document.getElementById('setupModal').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                
-                const currentDayNum = appData.history.length + 1;
-                const lastGameDay = appData.gameHistory.length > 0 ? appData.gameHistory[appData.gameHistory.length - 1].day : 0;
-                const isGameSuccess = appData.gameHistory.length > 0 && appData.gameHistory[appData.gameHistory.length - 1].day === currentDayNum && appData.gameHistory[appData.gameHistory.length - 1].isSuccess;
+<!-- =====================================================
+     EDIT DAY MODAL
+     ===================================================== -->
+<div id="editModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title text-amber">
+      <i class="fas fa-pencil-alt" style="margin-right:8px"></i>Edit Day <span id="editDayNum"></span>
+    </div>
+    <div class="modal-sub">Changes will cascade-recalculate all subsequent days.</div>
 
-                updateGameStatus(currentDayNum, isGameSuccess);
+    <div class="form-group">
+      <label class="form-label">Net P&amp;L ($)</label>
+      <input type="number" id="editPnL" placeholder="e.g. 45.00" step="0.01" />
+    </div>
 
-                renderDashboard();
-                renderTable();
-            } else {
-                document.getElementById('setupModal').classList.remove('hidden');
-                document.getElementById('initialTargetPerc').addEventListener('input', updateSetupProjection);
-                document.getElementById('initCapital').addEventListener('input', updateSetupProjection);
-            }
-        }
+    <div class="form-group">
+      <label class="form-label">Trades Taken</label>
+      <input type="number" id="editTrades" placeholder="e.g. 2" />
+    </div>
 
-        function updateSetupProjection() {
-            const capital = parseFloat(document.getElementById('initCapital').value) || 0;
-            const targetPerc = parseFloat(document.getElementById('initialTargetPerc').value) || 0;
-            
-            if (capital > 0 && targetPerc > 0) {
-                let projectedCap = capital;
-                for(let i = 0; i < 100; i++) {
-                    projectedCap *= (1 + targetPerc / 100);
-                }
-                document.getElementById('initialProjectionDisplay').innerText = formatMoney(projectedCap);
-            } else {
-                document.getElementById('initialProjectionDisplay').innerText = '$0.00';
-            }
-        }
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" id="editSaveBtn" style="flex:1">
+        <i class="fas fa-save"></i> Save &amp; Recalculate
+      </button>
+      <button class="btn btn-secondary" onclick="closeEditModal()" style="flex:1">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
 
-        function startChallenge() {
-            const caps = parseFloat(document.getElementById('initCapital').value);
-            const date = document.getElementById('startDate').value;
-            const name = document.getElementById('userName').value.trim();
-            const age = parseInt(document.getElementById('userAge').value);
-            const initialPerc = parseFloat(document.getElementById('initialTargetPerc').value);
+<!-- =====================================================
+     MAIN APP
+     ===================================================== -->
+<div id="app" class="app-wrapper hidden">
 
-            if (!caps || !date || name === '' || isNaN(age) || isNaN(initialPerc)) {
-                return alert("Please fill all required fields correctly (Capital, Name, Age, Target %, Start Date).");
-            }
+  <!-- HEADER -->
+  <div class="app-header">
+    <div>
+      <div class="app-title">100 Day Spot Challenge</div>
+      <div class="app-subtitle">
+        Protocol: <span id="dispUserName" style="color:var(--text-primary);font-weight:700"></span>
+        &nbsp;·&nbsp; Age <span id="dispUserAge"></span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="exportData()">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-danger" onclick="confirmReset()">
+        <i class="fas fa-skull"></i> Reset
+      </button>
+    </div>
+  </div>
 
-            appData.initialCapital = caps;
-            appData.currentCapital = caps;
-            appData.startDate = date;
-            appData.userName = name;
-            appData.userAge = age;
-            appData.initialTargetPerc = initialPerc;
-            appData.history = [];
-            appData.gameHistory = [];
-            currentDayAttemptCount = 0; // Reset for Day 1
-            
-            saveData();
-            document.getElementById('setupModal').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            renderDashboard();
-            renderTable();
-        }
+  <!-- =====================================================
+       SECTION 1 — CHALLENGE STATUS
+       ===================================================== -->
+  <div class="section-header">
+    <span class="section-badge">1</span>
+    <span class="section-title">Challenge Status</span>
+  </div>
 
-        function getTargetPercent(dayNum) {
-            let basePerc = appData.initialTargetPerc;
-            if (dayNum > 80) {
-                const daysOver = dayNum - 80;
-                basePerc -= (daysOver * 0.05); 
-            }
-            return Math.max(0.5, basePerc);
-        }
-        
-        function updateGameStatus(currentDayNum, isSuccessful) {
-            const gameStatusIndicator = document.getElementById('gameStatusIndicator');
-            const submitDayBtn = document.getElementById('submitDayBtn');
-            
-            if (currentDayNum > 100) {
-                gameStatusIndicator.innerText = "Challenge Complete!";
-                gameStatusIndicator.classList.remove('bg-red-800/50', 'bg-emerald-800/50', 'text-red-300', 'border-red-700');
-                gameStatusIndicator.classList.add('bg-slate-700/50', 'text-slate-400', 'border-slate-600');
-                submitDayBtn.disabled = true;
-                return;
-            }
+  <div class="grid-4 mb-24">
 
-            if (!isSuccessful) {
-                // Game not played successfully for today
-                gameStatusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> Prequiz Required! Click to start.';
-                gameStatusIndicator.classList.remove('bg-emerald-800/50', 'text-emerald-300', 'border-emerald-700');
-                gameStatusIndicator.classList.add('bg-red-800/50', 'text-red-300', 'border-red-700');
-                submitDayBtn.disabled = true;
-            } else {
-                // Game played successfully for today
-                const attempts = appData.gameHistory.find(g => g.day === currentDayNum)?.totalAttempts || 1;
-                gameStatusIndicator.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Prequiz Complete (Attempt ${attempts}). Log Results.`;
-                gameStatusIndicator.classList.remove('bg-red-800/50', 'text-red-300', 'border-red-700');
-                gameStatusIndicator.classList.add('bg-emerald-800/50', 'text-emerald-300', 'border-emerald-700');
-                submitDayBtn.disabled = false;
-            }
-        }
+    <!-- Current Balance -->
+    <div class="card card--emerald">
+      <div class="label-xs">Current Balance</div>
+      <div class="stat-value" id="dispCurrentBalance">$0.00</div>
+      <div class="stat-sub" id="dispTotalPnL">
+        <span class="text-emerald">+0.00%</span> Total Return
+      </div>
+    </div>
 
-        function submitDay() {
-            const pnl = parseFloat(document.getElementById('dailyPnL').value);
-            const trades = parseInt(document.getElementById('dailyTrades').value) || 0;
-            const currentDayNum = appData.history.length + 1;
-            
-            // Check Prequiz Status before submitting
-            const isGameSuccess = appData.gameHistory.length > 0 && appData.gameHistory[appData.gameHistory.length - 1].day === currentDayNum && appData.gameHistory[appData.gameHistory.length - 1].isSuccess;
-            
-            if (!isGameSuccess) {
-                // Using a custom message instead of alert()
-                const messageBox = document.createElement('div');
-                messageBox.innerHTML = '<p class="text-red-400 font-semibold">ERROR: Please successfully complete the Daily Focus Challenge before logging results for Day ' + currentDayNum + '</p>';
-                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-red-700 transition duration-300 transform scale-100';
-                document.body.appendChild(messageBox);
-                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
-                return; 
-            }
-            if (isNaN(pnl)) {
-                const messageBox = document.createElement('div');
-                messageBox.innerHTML = '<p class="text-red-400 font-semibold">ERROR: Please enter a valid P&L amount.</p>';
-                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-red-700 transition duration-300 transform scale-100';
-                document.body.appendChild(messageBox);
-                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
-                return; 
-            }
-            if (currentDayNum > 100) {
-                const messageBox = document.createElement('div');
-                messageBox.innerHTML = '<p class="text-yellow-400 font-semibold">Challenge complete! Cannot log more days.</p>';
-                messageBox.className = 'fixed top-4 right-4 bg-slate-800 p-4 rounded-lg shadow-xl z-50 border border-yellow-700 transition duration-300 transform scale-100';
-                document.body.appendChild(messageBox);
-                setTimeout(() => { document.body.removeChild(messageBox); }, 3000);
-                return; 
-            }
+    <!-- Day Progress -->
+    <div class="card card--cyan">
+      <div class="label-xs">Day Progress</div>
+      <div class="stat-value" style="display:flex;align-items:baseline;gap:6px">
+        <span id="dispDay">1</span>
+        <span style="font-size:14px;color:var(--text-muted)">/100</span>
+      </div>
+      <div class="health-bar-track" style="margin-top:12px">
+        <div id="dayProgressBar" style="height:100%;border-radius:5px;background:var(--cyan);transition:width 0.5s;width:1%"></div>
+      </div>
+    </div>
 
-            // Calculate Date
-            let dateObj = new Date(appData.startDate);
-            dateObj.setDate(dateObj.getDate() + (currentDayNum - 1));
-            
-            const startCap = appData.currentCapital;
-            const targetPerc = getTargetPercent(currentDayNum);
-            const targetAmt = startCap * (targetPerc / 100);
-            
-            const achievedPerc = (pnl / startCap) * 100;
-            const endCap = startCap + pnl;
+    <!-- Account Health -->
+    <div class="card card--purple">
+      <div class="label-xs" style="display:flex;justify-content:space-between;align-items:center">
+        Account Health
+        <i class="fas fa-heartbeat" style="color:var(--purple)"></i>
+      </div>
+      <div class="health-bar-track" style="height:14px;margin-top:14px">
+        <div id="healthFill" class="health-bar-fill" style="width:100%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:6px">
+        <span>Critical</span><span>Stable</span><span>Thriving</span>
+      </div>
+    </div>
 
-            // Update State
-            appData.currentCapital = endCap;
-            appData.history.push({
-                day: currentDayNum,
-                date: dateObj.toISOString().split('T')[0],
-                startCap: startCap,
-                targetPerc: targetPerc,
-                targetAmt: targetAmt,
-                achievedPerc: achievedPerc,
-                pnl: pnl,
-                endCap: endCap,
-                trades: trades
-            });
+    <!-- Current Tier -->
+    <div class="card card--amber">
+      <div class="label-xs">Trader Level</div>
+      <div style="margin-top:10px">
+        <span class="tier-badge" id="tierBadge" style="font-size:15px">🔩 Recruit</span>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);margin-top:10px" id="xpDisplay">0 XP</div>
+    </div>
 
-            // Prepare for next day
-            currentDayAttemptCount = 0;
-            document.getElementById('dailyPnL').value = '';
-            document.getElementById('dailyTrades').value = '';
+  </div>
 
-            saveData();
-            renderDashboard();
-            renderTable();
-            
-            // Update game status for the next day (which is always 'Required' now)
-            updateGameStatus(currentDayNum + 1, false);
-        }
+  <!-- =====================================================
+       SECTION 2 — FUTURE PROJECTIONS
+       ===================================================== -->
+  <div class="panel mb-24">
+    <div class="section-header mb-16" style="margin-bottom:12px">
+      <span class="section-badge">2</span>
+      <i class="fas fa-chart-line" style="color:var(--blue)"></i>
+      <span class="section-title">Future Projection — <span id="horizonLabel">100-Day</span></span>
+    </div>
 
-        function saveData() {
-            localStorage.setItem('trading100_v3', JSON.stringify(appData));
-        }
+    <div class="projection-tabs mb-16">
+      <button class="proj-tab" data-horizon="30" onclick="setHorizon(30)">30 Days</button>
+      <button class="proj-tab" data-horizon="60" onclick="setHorizon(60)">60 Days</button>
+      <button class="proj-tab" data-horizon="90" onclick="setHorizon(90)">90 Days</button>
+      <button class="proj-tab active" data-horizon="100" onclick="setHorizon(100)">100 Days</button>
+    </div>
 
-        function confirmReset() {
-             const result = window.confirm("Are you sure? This will wipe all progress.");
-             if(result) {
-                localStorage.removeItem('trading100_v3');
-                location.reload();
-             }
-        }
+    <div class="proj-grid">
+      <div class="proj-cell">
+        <div class="proj-cell__label">Initial Goal (<span id="initialGoalPerc">0%</span>)</div>
+        <div class="proj-cell__value text-amber" id="initialGoal100">$0.00</div>
+      </div>
+      <div class="proj-cell">
+        <div class="proj-cell__label">At Your Avg (<span id="dispAvgReturnPerc">0.0%</span>/day)</div>
+        <div class="proj-cell__value text-emerald" id="proj100Actual">$0.00</div>
+      </div>
+      <div class="proj-cell">
+        <div class="proj-cell__label">Best Case (Target %)</div>
+        <div class="proj-cell__value text-cyan" id="proj100Target">$0.00</div>
+      </div>
+    </div>
+  </div>
 
-        function exportData() {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Date,Day,Start Capital,Target %,Achieved %,PnL,End Capital,Trades,Game Score,Total Attempts,Game Success\n";
-            
-            appData.history.forEach((row) => {
-                const gameEntry = appData.gameHistory.find(g => g.day === row.day) || {};
-                const score = gameEntry.finalScore !== undefined ? gameEntry.finalScore : 'N/A';
-                const attempts = gameEntry.totalAttempts !== undefined ? gameEntry.totalAttempts : 'N/A';
-                const success = gameEntry.isSuccess !== undefined ? (gameEntry.isSuccess ? 'Y' : 'N') : 'N/A';
-                
-                let rowStr = `${row.date},${row.day},${row.startCap.toFixed(2)},${row.targetPerc.toFixed(2)},${row.achievedPerc.toFixed(2)},${row.pnl.toFixed(2)},${row.endCap.toFixed(2)},${row.trades},${score},${attempts},${success}`;
-                csvContent += rowStr + "\n";
-            });
+  <!-- =====================================================
+       SECTION 3 — LOG TODAY'S RESULTS
+       ===================================================== -->
+  <div class="panel mb-24" style="background:var(--bg-card);border-color:rgba(0,200,140,0.15)">
+    <div class="section-header mb-16" style="margin-bottom:12px">
+      <span class="section-badge">3</span>
+      <span class="section-title">
+        Log Day
+        <span id="inputDayNum" style="background:var(--emerald);color:#000;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;font-weight:800;margin-left:4px">1</span>
+        Results
+      </span>
+    </div>
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `${appData.userName.replace(/\s/g, '_')}_trading_challenge_data.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+    <!-- Target Strip -->
+    <div class="target-strip">
+      <div class="target-cell target-cell--cyan">
+        <div class="target-cell__label">Target %</div>
+        <div class="target-cell__value" id="targetPercDisplay">0.00%</div>
+      </div>
+      <div class="target-cell target-cell--green">
+        <div class="target-cell__label">Profit Target $</div>
+        <div class="target-cell__value" id="targetProfitDisplay">$0.00</div>
+      </div>
+      <div class="target-cell target-cell--red">
+        <div class="target-cell__label">Worst Case Loss (15%)</div>
+        <div class="target-cell__value" id="worstLossDisplay">-$0.00</div>
+      </div>
+      <div class="target-cell target-cell--amber">
+        <div class="target-cell__label">If Target Hit → Balance</div>
+        <div class="target-cell__value" id="expectedBalDisplay">$0.00</div>
+      </div>
+    </div>
 
-        // --- Rendering ---
+    <!-- Input Row -->
+    <div class="log-form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Trades Taken</label>
+        <input type="number" id="dailyTrades" placeholder="0" min="0" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Net P&amp;L ($)</label>
+        <div class="pnl-input-wrap">
+          <span>$</span>
+          <input type="number" id="dailyPnL" placeholder="0.00" step="0.01" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">&nbsp;</label>
+        <button class="btn btn-primary w-full" onclick="submitDay()" id="submitDayBtn">
+          <i class="fas fa-check"></i> Complete Day
+        </button>
+      </div>
+    </div>
+  </div>
 
-        function renderDashboard() {
-            const dayNum = appData.history.length + 1;
-            const currentCapital = appData.currentCapital;
-            const initialCapital = appData.initialCapital;
+  <!-- =====================================================
+       SECTION 4 — TRADER PERFORMANCE
+       ===================================================== -->
+  <div class="panel mb-24">
+    <div class="section-header mb-16" style="margin-bottom:12px">
+      <span class="section-badge">4</span>
+      <i class="fas fa-trophy" style="color:var(--amber)"></i>
+      <span class="section-title">Trader Performance Engine</span>
+    </div>
 
-            // Header User Info
-            document.getElementById('dispUserName').innerText = appData.userName;
-            document.getElementById('dispUserAge').innerText = appData.userAge;
+    <!-- Tier + XP row -->
+    <div class="grid-2 mb-16">
+      <div class="card" style="display:flex;flex-direction:column;gap:8px">
+        <div class="label-xs">Current Tier</div>
+        <span class="tier-badge" id="tierBadge2" style="font-size:16px;align-self:flex-start">🔩 Recruit</span>
+        <div class="xp-bar-track">
+          <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)" id="xpNextLabel">0 / 200 XP → Apprentice</div>
+      </div>
 
-            // 1. Basic Stats
-            document.getElementById('dispCurrentBalance').innerText = formatMoney(currentCapital);
-            document.getElementById('inputDayNum').innerText = dayNum;
-            document.getElementById('dispDay').innerText = Math.min(dayNum, 100);
-            document.getElementById('dayProgressBar').style.width = `${Math.min(dayNum, 100)}%`;
-            
-            // Live Target Display (Section 3)
-            const liveTargetPerc = getTargetPercent(dayNum);
-            const liveTargetAmt = currentCapital * (liveTargetPerc / 100);
-            document.getElementById('currentTargetPerc').innerText = liveTargetPerc.toFixed(1) + "%";
-            document.getElementById('currentTargetAmt').innerText = formatMoney(liveTargetAmt);
+      <div class="card" style="text-align:center">
+        <div class="label-xs mb-6">Overall Score</div>
+        <div style="font-family:var(--font-mono);font-size:52px;font-weight:800;line-height:1" id="compositeScore">—</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px" id="compositeLabel">No data yet</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
+          Current Streak: <span style="color:var(--emerald);font-weight:700" id="streakDisplay">0 days</span>
+        </div>
+      </div>
+    </div>
 
+    <!-- Score Breakdown -->
+    <div class="score-breakdown mb-16">
+      <div class="score-metric">
+        <div class="score-metric__label">Win Rate</div>
+        <div class="score-metric__value" id="scoreWR">—</div>
+        <div class="score-metric__sub">Streak bonus included</div>
+      </div>
+      <div class="score-metric">
+        <div class="score-metric__label">Consistency</div>
+        <div class="score-metric__value" id="scoreCS">—</div>
+        <div class="score-metric__sub">EMA of target hits</div>
+      </div>
+      <div class="score-metric">
+        <div class="score-metric__label">Discipline</div>
+        <div class="score-metric__value" id="scoreDS">—</div>
+        <div class="score-metric__sub">Clean trade scoring</div>
+      </div>
+      <div class="score-metric">
+        <div class="score-metric__label">Risk Mgmt</div>
+        <div class="score-metric__value" id="scoreRM">—</div>
+        <div class="score-metric__sub">Loss size control</div>
+      </div>
+    </div>
 
-            // Total Return %
-            const totalReturn = ((currentCapital - initialCapital) / initialCapital) * 100;
-            const elTotalReturn = document.getElementById('dispTotalPnL');
-            elTotalReturn.innerHTML = `<span class="${totalReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}">${totalReturn.toFixed(2)}%</span> Total Return`;
+    <!-- Achievements -->
+    <div class="label-xs mb-10">Achievements</div>
+    <div class="achievements-row" id="achievementsRow">
+      <!-- filled by JS -->
+    </div>
+  </div>
 
-            // 2. Health Bar Logic (Consistency)
-            let health = 100;
-            if (appData.history.length > 0) {
-                let recentScore = 0;
-                const lookback = Math.min(appData.history.length, 10);
-                for(let i=0; i<lookback; i++) {
-                    const entry = appData.history[appData.history.length - 1 - i];
-                    if (entry.achievedPerc >= entry.targetPerc) recentScore += 10;
-                    else if (entry.pnl >= 0) recentScore += 2;
-                    else recentScore -= 10;
-                }
-                health = Math.max(0, Math.min(100, 50 + recentScore));
-            }
+  <!-- =====================================================
+       DATA TABLE
+       ===================================================== -->
+  <div class="section-header mb-16">
+    <span class="section-badge" style="background:var(--cyan);color:#000">5</span>
+    <span class="section-title">Trading Log</span>
+  </div>
 
-            const elHealth = document.getElementById('healthFill');
-            elHealth.style.width = `${health}%`;
-            if (health > 75) elHealth.className = "health-fill h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]";
-            else if (health > 40) elHealth.className = "health-fill h-full bg-gradient-to-r from-yellow-600 to-yellow-400";
-            else elHealth.className = "health-fill h-full bg-gradient-to-r from-red-600 to-red-500";
-            
-            // 4. Game Accuracy
-            const successfulGames = appData.gameHistory.filter(g => g.isSuccess).length;
-            const totalDaysAttempted = appData.gameHistory.length;
-            const accuracy = totalDaysAttempted > 0 ? (successfulGames / totalDaysAttempted) * 100 : 0;
-            document.getElementById('dispGameAccuracy').innerText = accuracy.toFixed(1) + "%";
-            
-            const gameStatusEl = document.getElementById('dispGameStatus');
-            gameStatusEl.classList.remove('text-emerald-400', 'text-yellow-400', 'text-red-400');
-            if (accuracy >= 70) {
-                gameStatusEl.innerText = "Excellent Focus";
-                gameStatusEl.classList.add('text-emerald-400');
-            } else if (accuracy >= 40) {
-                gameStatusEl.innerText = "Stable";
-                gameStatusEl.classList.add('text-yellow-400');
-            } else {
-                gameStatusEl.innerText = "Need Practice";
-                gameStatusEl.classList.add('text-red-400');
-            }
+  <div class="table-wrap mb-24">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Day</th>
+          <th>Start Cap</th>
+          <th>Target %</th>
+          <th>Achieved %</th>
+          <th>P&amp;L ($)</th>
+          <th>End Total</th>
+          <th>Trades</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
 
+  <!-- =====================================================
+       INFO SECTION
+       ===================================================== -->
+  <div class="panel mb-24" style="border-color:rgba(245,158,11,0.15)">
+    <div style="color:var(--amber);font-size:15px;font-weight:700;margin-bottom:16px">
+      <i class="fas fa-info-circle" style="margin-right:8px"></i>Dashboard Guide
+    </div>
+    <div style="color:var(--text-secondary);font-size:13px;line-height:1.8;display:flex;flex-direction:column;gap:12px">
+      <p><strong style="color:var(--text-primary)">Target Decay System:</strong> Your daily target % stays fixed for Days 1–50. From Day 51, it decreases gradually as your capital grows, reducing liquidation risk. Days 91–100 use a very tight target (~0.5–1%) to lock in compounded gains.</p>
+      <p><strong style="color:var(--text-primary)">Worst-Case Loss (15%):</strong> If you lose more than 15% of your current balance in a single day, that's outside the risk envelope. Use this as your hard stop-loss reference.</p>
+      <p><strong style="color:var(--text-primary)">Performance Engine:</strong> Scored across 4 axes — Win Rate (30%), Consistency via EMA (30%), Discipline via trade quality (25%), and Risk Management (15%). XP compounds with streaks.</p>
+      <p><strong style="color:var(--text-primary)">Edit &amp; Delete:</strong> Any logged day can be edited or deleted. All subsequent days cascade-recalculate automatically to keep your balance chain accurate.</p>
+    </div>
+  </div>
 
-            // 3. Projections
-            document.getElementById('initialGoalPerc').innerText = `${appData.initialTargetPerc.toFixed(1)}%`;
-            let initialGoalCap = appData.initialCapital;
-            for(let i=0; i<100; i++) {
-                initialGoalCap *= (1 + appData.initialTargetPerc / 100);
-            }
-            document.getElementById('initialGoal100').innerText = formatMoney(initialGoalCap);
+  <!-- ABOUT -->
+  <div class="panel" style="border-color:rgba(168,85,247,0.15)">
+    <div style="color:var(--purple);font-size:15px;font-weight:700;margin-bottom:12px">
+      <i class="fas fa-user-astronaut" style="margin-right:8px"></i>About the Trader
+    </div>
+    <p style="color:var(--text-secondary);font-size:13px;line-height:1.8;margin-bottom:16px">
+      Built and executed by <strong style="color:var(--text-primary)">Khizar</strong> — crypto spot trader, graphic designer, and builder. This dashboard enforces the disciplines of compounding, focus, and systematic execution over 100 days on platforms like Binance.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="https://www.linkedin.com/in/khizar226/" target="_blank" class="btn" style="background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.3)">
+        <i class="fab fa-linkedin"></i> LinkedIn
+      </a>
+      <a href="https://www.instagram.com/khizar226" target="_blank" class="btn" style="background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid rgba(236,72,153,0.3)">
+        <i class="fab fa-instagram"></i> Instagram
+      </a>
+    </div>
+  </div>
 
-            let avgDailyPerc = 0;
-            if (appData.history.length > 0) {
-                const sumPerc = appData.history.reduce((acc, curr) => acc + curr.achievedPerc, 0);
-                avgDailyPerc = sumPerc / appData.history.length;
-            }
-            document.getElementById('dispAvgReturnPerc').innerText = avgDailyPerc.toFixed(2) + "%";
-            
-            const daysLeft = 100 - (dayNum - 1);
+</div><!-- /app -->
 
-            function project(startCap, dailyPerc, days) {
-                let simCap = startCap;
-                for(let i=0; i<days; i++) {
-                    simCap = simCap * (1 + (dailyPerc/100));
-                }
-                return simCap;
-            }
-            
-            const projActual = project(currentCapital, avgDailyPerc, daysLeft);
-            document.getElementById('proj100Actual').innerText = formatMoney(projActual);
-
-            const targetProj = project(currentCapital, getTargetPercent(dayNum), daysLeft);
-            document.getElementById('proj100Target').innerText = formatMoney(targetProj);
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('logBody');
-            tbody.innerHTML = '';
-
-            // Show in reverse order (newest first)
-            [...appData.history].reverse().forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800 transition";
-                
-                const isProfitable = row.pnl >= 0;
-                const pnlClass = isProfitable ? "text-emerald-400" : "text-red-400";
-                
-                const gameEntry = appData.gameHistory.find(g => g.day === row.day);
-                let gameDisplay = '<span class="text-slate-600">N/A</span>';
-
-                if (gameEntry) {
-                    const score = gameEntry.finalScore || 0;
-                    const attempts = gameEntry.totalAttempts || 1;
-                    gameDisplay = `<span class="${gameEntry.isSuccess ? 'text-emerald-400' : 'text-red-400'}">${score}/5 (${attempts})</span>`;
-                }
-                
-                tr.innerHTML = `
-                    <td class="px-4 py-3 whitespace-nowrap text-slate-400">${row.date}</td>
-                    <td class="px-4 py-3 font-mono text-slate-300">Day ${row.day}</td>
-                    <td class="px-4 py-3 font-mono text-slate-500">${formatMoney(row.startCap)}</td>
-                    <td class="px-4 py-3 font-mono text-cyan-400">${row.targetPerc.toFixed(1)}%</td>
-                    <td class="px-4 py-3 font-mono ${row.achievedPerc >= row.targetPerc ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${row.achievedPerc.toFixed(2)}%</td>
-                    <td class="px-4 py-3 font-mono font-bold text-right ${pnlClass}">${row.pnl > 0 ? '+' : ''}${formatMoney(row.pnl)}</td>
-                    <td class="px-4 py-3 font-mono text-white text-right font-bold">${formatMoney(row.endCap)}</td>
-                    <td class="px-4 py-3 text-center font-bold">${gameDisplay}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- Utility ---
-
-        function formatMoney(num) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
-        }
-
-        // --- Daily Quiz Logic ---
-        
-        const QUIZ_DURATION = 10; // seconds
-
-        function generateQuizQuestion() {
-            const num1 = Math.floor(Math.random() * 50) + 10;
-            const num2 = Math.floor(Math.random() * 50) + 10;
-            const operator = Math.random() < 0.5 ? '+' : '-';
-            
-            let question, answer;
-            if (operator === '+') {
-                question = `${num1} ${operator} ${num2}`;
-                answer = num1 + num2;
-            } else {
-                const large = Math.max(num1, num2);
-                const small = Math.min(num1, num2);
-                question = `${large} - ${small}`;
-                answer = large - small;
-            }
-
-            return { question, answer };
-        }
-
-        function showQuizModal() {
-            const currentDayNum = appData.history.length + 1;
-            
-            // Check if game is already successfully completed for today
-            const gameEntry = appData.gameHistory.find(g => g.day === currentDayNum);
-            if (gameEntry && gameEntry.isSuccess) {
-                return; // Do nothing if already done
-            }
-            if (currentDayNum > 100) return;
-
-            // Reset UI for fresh attempt
-            document.getElementById('quizAnswer').value = '';
-            document.getElementById('quizAnswer').disabled = false;
-            document.getElementById('quizTimer').innerText = `${QUIZ_DURATION}s`;
-            document.getElementById('quizQuestion').classList.remove('text-red-400', 'text-emerald-400');
-            document.getElementById('quizMessage').classList.add('hidden');
-            document.getElementById('quizSubmitBtn').classList.remove('hidden');
-            document.getElementById('quizRetryBtn').classList.add('hidden');
-            document.getElementById('quizCloseBtn').classList.add('hidden');
-            document.getElementById('quizModal').classList.remove('hidden');
-            
-            // Determine attempt count
-            currentDayAttemptCount = (gameEntry?.totalAttempts || 0) + 1;
-            document.getElementById('quizAttemptCount').innerText = currentDayAttemptCount;
-            
-            currentQuiz = generateQuizQuestion();
-            document.getElementById('quizQuestion').innerText = currentQuiz.question;
-            
-            quizStartTime = Date.now();
-            document.getElementById('quizAnswer').focus();
-
-            let timeLeft = QUIZ_DURATION;
-            document.getElementById('quizTimer').innerText = `${timeLeft}s`;
-
-            quizTimerId = setInterval(() => {
-                timeLeft--;
-                document.getElementById('quizTimer').innerText = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(quizTimerId);
-                    handleQuizFailure('Time out! You must answer faster.');
-                }
-            }, 1000);
-        }
-        
-        function handleQuizFailure(message) {
-            document.getElementById('quizAnswer').disabled = true;
-            document.getElementById('quizQuestion').classList.add('text-red-400');
-            document.getElementById('quizMessage').innerText = message;
-            document.getElementById('quizMessage').classList.remove('hidden');
-            document.getElementById('quizSubmitBtn').classList.add('hidden');
-            document.getElementById('quizRetryBtn').classList.remove('hidden');
-            document.getElementById('quizCloseBtn').classList.remove('hidden');
-        }
-
-        function checkQuizAnswer() {
-            if (!currentQuiz) return;
-            clearInterval(quizTimerId);
-            const userAnswer = parseInt(document.getElementById('quizAnswer').value);
-            
-            if (!isNaN(userAnswer) && userAnswer === currentQuiz.answer) {
-                // SUCCESS
-                document.getElementById('quizAnswer').disabled = true;
-                document.getElementById('quizQuestion').classList.add('text-emerald-400');
-                document.getElementById('quizMessage').innerText = "Correct! Focus verified.";
-                document.getElementById('quizMessage').classList.remove('hidden');
-                document.getElementById('quizSubmitBtn').classList.add('hidden');
-                document.getElementById('quizRetryBtn').classList.add('hidden');
-                document.getElementById('quizCloseBtn').classList.remove('hidden');
-                
-                recordQuizResult(true, 5); // 5/5 score on success
-                // Automatic close after 1 second
-                setTimeout(() => { closeQuizModal(); }, 1000);
-
-            } else {
-                // FAILURE
-                const message = `Incorrect. The correct answer was ${currentQuiz.answer}.`;
-                handleQuizFailure(message);
-                recordQuizResult(false, 0); // 0/5 score on failure
-            }
-        }
-
-        function retryQuiz() {
-            // Simply re-show the modal, which increments the attempt count
-            showQuizModal();
-        }
-
-        function closeQuizModal() {
-            clearInterval(quizTimerId);
-            document.getElementById('quizModal').classList.add('hidden');
-        }
-
-        function recordQuizResult(isSuccess, finalScore) {
-            const currentDayNum = appData.history.length + 1;
-            let dateObj = new Date(appData.startDate);
-            dateObj.setDate(dateObj.getDate() + (currentDayNum - 1));
-
-            // Find existing entry for today
-            const existingIndex = appData.gameHistory.findIndex(g => g.day === currentDayNum);
-            
-            const newEntry = {
-                day: currentDayNum,
-                date: dateObj.toISOString().split('T')[0],
-                finalScore: isSuccess ? finalScore : 0,
-                totalAttempts: currentDayAttemptCount, // Use the current global attempt counter
-                isSuccess: isSuccess
-            };
-
-            if (existingIndex !== -1) {
-                // Update existing entry (only if successful, or if we want to log the final failed attempt)
-                appData.gameHistory[existingIndex] = newEntry;
-            } else {
-                // Add new entry
-                appData.gameHistory.push(newEntry);
-            }
-
-            saveData();
-            renderDashboard();
-            updateGameStatus(currentDayNum, isSuccess);
-        }
-        
-        // Init App
-        init();
-
-    </script>
+<!-- SCRIPTS -->
+<script src="js/data.js"></script>
+<script src="js/performance.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Boot
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    // Sync the duplicate tier badge in section 4
+    const renderTierSync = () => {
+      const b1 = document.getElementById('tierBadge');
+      const b2 = document.getElementById('tierBadge2');
+      if (b1 && b2) {
+        b2.innerHTML = b1.innerHTML;
+        b2.style.cssText = b1.style.cssText;
+      }
+    };
+    // Patch renderPerformance to also sync
+    const origRenderPerf = window.renderPerformance;
+    window.renderPerformance = function() {
+      origRenderPerf();
+      renderTierSync();
+    };
+  });
+</script>
 </body>
 </html>
